@@ -2,3 +2,6 @@ Samrt care device
 Team Members (with
 student ids)	Samereh Gheibi                      328103
 Sasan Izadseta                         328999 
+
+ docker build .
+ docker tag sha256:33ff91e92ff9ecbf44502ba6847f295e257ec73e45e44976fad685f582202dc8 scd-postgress-dao:latest

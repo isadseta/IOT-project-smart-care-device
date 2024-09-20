@@ -1,0 +1,33 @@
+version: '3.1'
+services:
+  scd-relational-database-postgress:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: ComeToSchool1367
+  scd-relational-database-dao:
+    image: scd-postgress-dao
+    restart: always
+    ports:
+      - 50000:50000
+    environment:
+      RD_database_name: postgres
+      RD_user_name: postgres
+      environment: running
+      RD_user_password: ComeToSchool1367
+      RD_host: scd-relational-database-postgress
+      RD_port_number: 5432
+      RD_time_out: 30
+    depends_on:
+      - "scd-relational-database-postgress"
+

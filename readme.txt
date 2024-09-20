@@ -1,0 +1,1 @@
+docker-compose -f .\docker-iot-project-smart-care-device.yaml up
