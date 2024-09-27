@@ -1,5 +1,44 @@
 version: '3.1'
 services:
+  scd_influxdb:
+    image: influxdb:2
+#    volumes:
+#      - /mnt/influxdb/data:/var/lib/influxdb2:rw
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=sa
+      - DOCKER_INFLUXDB_INIT_PASSWORD=ComeToSchool1367
+      - DOCKER_INFLUXDB_INIT_ORG=IOT
+      - DOCKER_INFLUXDB_INIT_BUCKET=IOT_SCD_PROJECT
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=MyInitialAdminToken0==
+    ports:
+      - 8086:8086
+  scd-influxdb-dal:
+    image: influx_db_access
+    restart: always
+    ports:
+      - 50030:50030
+    environment:
+      - environment=running
+      - SCD_INFLUXDB_DAL_ORG=IOT
+      - SCD_INFLUXDB_DAL_INFLUXDB_URL=http://scd_influxdb:8086
+      - SCD_INFLUXDB_DAL_INFLUXDB_TOCKEN=MyInitialAdminToken0==
+      - SCD_INFLUXDB_DAL_INFLUXDB_BUCKET=IOT_SCD_PROJECT
+      - IP_ADDRESS=0.0.0.0
+      - IP_PORT=50030
+    depends_on:
+      - "scd_influxdb"
+  scd-mosquitto:
+    image: eclipse-mosquitto
+    hostname: mosquitto
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+#    volumes:
+#      - ./mosquitto:/etc/mosquitto
+#      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
   scd-relational-database-postgress:
     image: postgres
     restart: always
@@ -28,6 +67,8 @@ services:
       RD_host: scd-relational-database-postgress
       RD_port_number: 5432
       RD_time_out: 30
+      IP_PORT: 50000
+      IP_ADDRESS: 0.0.0.0
     depends_on:
       - "scd-relational-database-postgress"
 

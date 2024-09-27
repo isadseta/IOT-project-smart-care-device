@@ -5,3 +5,10 @@ Sasan Izadseta                         328999
 
  docker build .
  docker tag sha256:33ff91e92ff9ecbf44502ba6847f295e257ec73e45e44976fad685f582202dc8 scd-postgress-dao:latest
+
+
+ --------------------------------------------------------------------------------------------
+ docker run -d -p 8086:8086 -v "$PWD/data:/var/lib/influxdb2"
+ -v "$PWD/config:/etc/influxdb2" -e DOCKER_INFLUXDB_INIT_MODE=setup -e DOCKER_INFLUXDB_INIT_USERNAME=sa
+ -e DOCKER_INFLUXDB_INIT_PASSWORD=ComeToSchool1367 -e DOCKER_INFLUXDB_INIT_ORG=IOT -
+ e DOCKER_INFLUXDB_INIT_BUCKET=smart_care_device influxdb:2

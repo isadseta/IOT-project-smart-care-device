@@ -28,7 +28,6 @@ def database_connection(database_name='postgres'):
 def fetch_list(db_quey):
     conn = database_connection()
     cur = conn.cursor()
-    print(db_quey)
     cur.execute(db_quey)
     rows = cur.fetchall()
     conn.commit()
