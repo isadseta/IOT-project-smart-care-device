@@ -1,0 +1,10 @@
+docker run --name mosquitto -d \
+  --restart=always \
+  --publish 1883:1883 -p 2222:22 \
+  -e MOSQUITTO_USERNAME=mosquitto \
+  -e MOSQUITTO_PASSWORD=mosquitto \
+  --volume "$(pwd)"/data:/mosquitto/data \
+  --volume "$(pwd)"/log:/mosquitto/log \
+  mosquitto:latest
+
+  docker run --name mosquitto -d --restart=always --publish 1883:1883 -p 2222:22 -e MOSQUITTO_USERNAME=sa -e MOSQUITTO_PASSWORD=1 eclipse-mosquitto:latest
