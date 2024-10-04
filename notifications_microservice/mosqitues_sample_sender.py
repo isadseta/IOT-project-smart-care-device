@@ -5,17 +5,15 @@ import time
 
 from paho.mqtt import client as mqtt_client
 
-
 broker = 'localhost'
 port = 1883
 topic = "iotproject/mqttproject"
 # Generate a Client ID with the publish prefix.
 client_id = f'publish-{random.randint(0, 1000)}'
+
+
 # username = 'emqx'
 # password = 'public'
-
-
-
 
 
 def on_connect(client, userdata, flags, rc):
@@ -25,34 +23,39 @@ def on_connect(client, userdata, flags, rc):
         print("Connected to MQTT Broker!")
     else:
         print("Failed to connect, return code %d\n", rc)
+
+
 def connect_mqtt():
-    client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION2,client_id)
+    client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION2, client_id)
     #client.username_pw_set("sa", "1")
     client.on_connect = on_connect
     client.connect(broker, port)
     return client
 
+
 def on_message(client, userdata, msg):
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
-def subscribe(client: mqtt_client):
 
+def subscribe(client: mqtt_client):
     client.subscribe(topic)
     client.on_message = on_message
-def publish(client):
+
+
+def publish(client, topic, msg):
     msg_count = 1
     while True:
         time.sleep(1)
-        msg = f"messages: {msg_count}"
         result = client.publish(topic, msg)
         # result: [0, 1]
         status = result[0]
         if status == 0:
             print(f"Send `{msg}` to topic `{topic}`")
+            break
         else:
             print(f"Failed to send message to topic {topic}")
         msg_count += 1
-        if msg_count > 50:
+        if msg_count > 5:
             break
 
 
@@ -63,6 +66,14 @@ def run():
     publish(client)
     client.loop_stop()
 
+
+def send_notification_on_mqtt(topic, msg):
+    client = connect_mqtt()
+    client.loop_start()
+    publish(client, topic, msg)
+    client.loop_stop()
+
+
 def run_sender_in_threading():
     while True:
         try:
@@ -70,6 +81,7 @@ def run_sender_in_threading():
         except Exception as ex:
             print("sender thread has error contact administrator")
             print(ex)
+
 
 if __name__ == '__main__':
     run()

@@ -15,8 +15,12 @@ class ServiceCatalog():
         self.catalog = BaseService()
 
     def GET(self, *uri, **params):
-        service_url = os.environ["scd_relational_database_dao"] + "/ServiceDAL"
-        service_result = requests.get(service_url)
+        if len(uri)>0 and uri[0].lower()=="summary":
+            service_url = os.environ["scd_relational_database_dao"] + "/SystemConfigDal"
+            service_result = requests.get(service_url)
+        else:
+            service_url = os.environ["scd_relational_database_dao"] + "/ServiceDAL"
+            service_result = requests.get(service_url)
         return service_result.text
 
     def POST(self, *uri):
@@ -34,6 +38,8 @@ class ServiceCatalog():
         service_url = os.environ["scd_relational_database_dao"] + "/ServiceDAL"+f"/{Id}"
         service_result = requests.delete(service_url)
         return service_result.text
+
+
 
 
 if __name__ == '__main__':

@@ -1,14 +1,16 @@
 # python 3.11
-
+import os
 import random
 import time
 
 from paho.mqtt import client as mqtt_client
 
 
-broker = '127.0.0.1'
-port = 1883
-topic = "iotproject/mqttproject"
+broker = os.environ["mosquitto_url"]
+port = os.environ["mosquitto_port"]
+measurment_topic ="SCD_IOT_PROJECT/measurments/"
+notifications_topic ="SCD_IOT_PROJECT/notifications/"
+
 # Generate a Client ID with the publish prefix.
 client_id = f'publish-{random.randint(0, 1000)}'
 # username = 'emqx'
@@ -27,14 +29,23 @@ def connect_mqtt():
     client.connect(broker, port)
     return client
 
-
+def process_measurment(topic,message):
+    pass
+def process_notification(topic,message):
+    pass
 def on_message(client, userdata, msg):
+    topic_parts=msg.topic.split("/")
+    if topic_parts[1]=="measurments":
+        process_measurment(msg.topic,msg)
+    else:
+        process_notification(msg.topic,msg)
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 def subscribe(client: mqtt_client):
-
-    client.subscribe(topic)
+    client.subscribe(measurment_topic)
+    client.subscribe(notifications_topic)
     client.on_message = on_message
     print("subscribed successfully.")
+
 def publish(client):
     msg_count = 1
     while True:

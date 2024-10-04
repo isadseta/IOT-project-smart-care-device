@@ -1,6 +1,9 @@
 import json
 import os
-
+import datetime
+import time
+import requests
+system_config=None
 class Service():
     def __init__(self, service_name=None, ip_address=None, ip_port=None):
         if service_name is None:
@@ -33,3 +36,34 @@ class RelationalDatabaseDAL(object):
     def __init__(self):
         self.serviceCatalogIP = os.environ['IP_ADDRESS']
         self.serviceCatalogPort = os.environ['IP_PORT']
+        self.last_config_load = datetime.datetime.now() - datetime.timedelta(minutes=2)
+
+    def reload_config(self):
+        global system_config
+        # getting system configs
+        service_catalog_address = os.environ['service_catalog'] + "/ServiceCatalog/summary"
+        while True:
+            try:
+                system_config = requests.get(service_catalog_address)
+                print("==================================================================================")
+                print("Configuration loaded successfully.")
+                print(system_config)
+                break
+            except Exception as ex:
+                print("==================================================================================")
+                print(f"Unsucceessfull loading cofiguration because of \n {ex}.")
+                time.sleep(5)
+
+    def system_config(self):
+        global system_config
+        current_time = datetime.datetime.now()
+        time_difference = current_time - self.last_config_load
+        minutes_difference = time_difference.total_seconds() / 60
+        if minutes_difference > 1 or system_config is None:
+            self.reload_config()
+        system_config_as_cixtionary = {}
+        for service_item in system_config.json():
+            print(service_item)
+            system_config_as_cixtionary[service_item["service_name"]] = service_item
+        print(system_config_as_cixtionary)
+        return system_config_as_cixtionary

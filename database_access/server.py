@@ -305,6 +305,24 @@ class OtherClassDall():
     def DELETE(self, *uri):
         pass
 
+def register_me():
+    global system_config
+    my_port = os.environ['IP_PORT']
+    my_address = os.environ['IP_ADDRESS']
+    while True:
+        try:
+            query = (" insert into service_catalog (service_name,service_value,last_state) values ('relational_database_access'"
+                     ",'") + f"http://{'127.0.0.1' if '0.0.0.0'in my_address else my_address }:{my_port}" + "',1)"
+            print(query)
+            result = execute_query(query)
+
+            break
+        except Exception as ex:
+            print("==================================================================================")
+            print(f"Unsucceessfull registration on the server because of \n {ex}.")
+            time.sleep(5)
+
+
 
 if __name__ == '__main__':
     try:
@@ -323,6 +341,11 @@ if __name__ == '__main__':
     except:
         os.environ['environment'] = 'debugging'
 
+    try:
+        if os.environ['service_catalog'] == None:
+            os.environ['service_catalog'] = 'http://localhost:50010'
+    except:
+        os.environ['service_catalog'] = 'http://localhost:50010'
     relational_database_dal_service = OtherClassDall()
     conf = {
         '/': {
@@ -335,6 +358,7 @@ if __name__ == '__main__':
     #except :
     #    raise
     tables_creation()
+    register_me()
     cherrypy.tree.mount(MessagesDAL(), '/' + type(MessagesDAL()).__name__, conf)
     cherrypy.tree.mount(UsersDAL(), '/' + type(UsersDAL()).__name__, conf)
     cherrypy.tree.mount(SystemConfigDal(), '/' + type(SystemConfigDal()).__name__, conf)

@@ -50,7 +50,7 @@ def tables_creation():
                 message_state int
             );
         """
-                ##message_state:[0:sent,1:recieved,2:read,3:deleted,4:accepted,5:rejected]
+                ##message_state:[0:sent,1:recieved,2:read,3:deleted,4:accepted,5:rejected,6:notification]
         execute_query(query)
     except:
         print("=========================================================================================")
