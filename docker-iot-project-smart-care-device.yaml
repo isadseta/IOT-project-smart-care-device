@@ -24,8 +24,9 @@ services:
       - SCD_INFLUXDB_DAL_INFLUXDB_URL=http://scd_influxdb:8086
       - SCD_INFLUXDB_DAL_INFLUXDB_TOCKEN=MyInitialAdminToken0==
       - SCD_INFLUXDB_DAL_INFLUXDB_BUCKET=IOT_SCD_PROJECT
-      - IP_ADDRESS=0.0.0.0
+      - IP_ADDRESS=scd-influxdb-dal
       - IP_PORT=50030
+      - service_catalog=http://service_catalog:50010
     depends_on:
       - "scd_influxdb"
   scd-mosquitto:
@@ -71,4 +72,32 @@ services:
       IP_ADDRESS: 0.0.0.0
     depends_on:
       - "scd-relational-database-postgress"
+  service_catalog:
+    image: service_catalog
+    restart: always
+    ports:
+      - 50010:50010
+    environment:
+      IP_PORT: 50010
+      IP_ADDRESS: 0.0.0.0
+      scd_relational_database_dao: http://scd-relational-database-dao:50000
+      environment: RUNNING
+    depends_on:
+      - "scd-relational-database-dao"
+      - "scd-relational-database-postgress"
+  scd_reporting:
+    image:  scd_reporting
+    restart: always
+    ports:
+      - 50070:50070
+    environment:
+      IP_PORT: 50070
+      IP_ADDRESS: 0.0.0.0
+      service_catalog: http://service_catalog:50010
+    depends_on:
+      - "service_catalog"
+      - "scd-relational-database-dao"
+      - "scd-influxdb-dal"
+      - "scd_influxdb"
+
 

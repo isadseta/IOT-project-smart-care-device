@@ -1,8 +1,11 @@
 import json
 import os
-import datetime
-import time
 import requests
+import time
+import datetime
+
+system_config = None
+
 
 class Service():
     def __init__(self, service_name=None, ip_address=None, ip_port=None):
@@ -36,8 +39,6 @@ class BaseService(object):
     last_config_load = datetime.datetime.now() - datetime.timedelta(minutes=2)
 
     def __init__(self):
-        self.serviceCatalogIP = os.environ['IP_ADDRESS']
-        self.serviceCatalogPort = os.environ['IP_PORT']
         self.serviceCatalogIP = os.environ['IP_ADDRESS']
         self.serviceCatalogPort = os.environ['IP_PORT']
         self.last_config_load = datetime.datetime.now() - datetime.timedelta(minutes=2)

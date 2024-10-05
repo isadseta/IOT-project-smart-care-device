@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import psycopg2
 
@@ -37,22 +38,31 @@ def fetch_list(db_quey):
     return rows
 
 
-def execute_query(db_quey):
-    try:
-        print("Running this query.")
-        print(db_quey)
-        conn = database_connection(database_name='postgres')
-        cur = conn.cursor()
-        cur.execute(db_quey)
-        id_of_new_row = 0  #cur.fetchone()[0]
-        conn.commit()
-        cur.close()
-        conn.close()
-        print("Query executed successfully")
-        print(db_quey)
-        return id_of_new_row
-    except:
-        raise
+def execute_query(db_quey,max_retry=0):
+    counter= max_retry
+    while True:
+        try:
+            print("Running this query.")
+            print(db_quey)
+            conn = database_connection(database_name='postgres')
+            cur = conn.cursor()
+            cur.execute(db_quey)
+            id_of_new_row = 0  #cur.fetchone()[0]
+            conn.commit()
+            cur.close()
+            conn.close()
+            print("Query executed successfully")
+            print(db_quey)
+            return id_of_new_row
+        except Exception as e:
+            if counter > 0:
+                print("=============================================================")
+                print("Query Excution failed :")
+                print(str(e))
+                counter -= 1
+                time.sleep(5)
+            else:
+                raise
 
 
 def create_database_query(db_quey):

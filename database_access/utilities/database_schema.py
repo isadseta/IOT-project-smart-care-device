@@ -14,9 +14,10 @@ def tables_creation():
                 last_state   char
             );
         """
-        execute_query(query)
-    except:
+        execute_query(query,max_retry=50)
+    except Exception as ex:
         print("=========================================================================================")
+        print(ex)
         print("configs creation failed")
         print(query)
     try:
@@ -32,9 +33,10 @@ def tables_creation():
                 user_type int
             );
         """
-        execute_query(query)
-    except:
+        execute_query(query,max_retry=50)
+    except Exception as ex:
         print("=========================================================================================")
+        print(ex)
         print("Users creation failed")
         print(query)
 #Messaging Table
@@ -51,9 +53,10 @@ def tables_creation():
             );
         """
                 ##message_state:[0:sent,1:recieved,2:read,3:deleted,4:accepted,5:rejected,6:notification]
-        execute_query(query)
-    except:
+        execute_query(query,max_retry=50)
+    except Exception as ex:
         print("=========================================================================================")
+        print(ex)
         print("Messaging creation failed")
         print(query)
 
@@ -66,8 +69,9 @@ def tables_creation():
                 sick_user_id bigint
             );
         """
-        execute_query(query)
-    except:
+        execute_query(query,max_retry=50)
+    except Exception as ex:
         print("=========================================================================================")
+        print(ex)
         print("Users creation failed")
         print(query)

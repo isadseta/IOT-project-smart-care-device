@@ -25,7 +25,7 @@ class ServiceDAL():
         if 'name' in params.keys():
             where_claus += f" and service_name like '%{params['name']}%' "
         if 'last_state' in params.keys():
-            where_claus += f' and last_state = {params['name']} '
+            where_claus += f" and last_state = {params['name']} "
         if len(where_claus) > 0:
             query += ' where 1=1 ' + where_claus
         fetched_rows = fetch_list(query)
@@ -236,9 +236,9 @@ class UsersDoctorsDAL():
         query = 'SELECT id,docter_user_id,sick_user_id FROM users_doctors_table '
         where_claus = ""
         if 'user_type' in params.keys():
-            where_claus += f' and docter_user_id = "{params['docter_user_id']}" '
+            where_claus += f" and docter_user_id = '{params['docter_user_id']}' "
         if 'user_type' in params.keys():
-            where_claus += f' and sick_user_id = "{params['sick_user_id']}" '
+            where_claus += f" and sick_user_id = '{params['sick_user_id']}' "
         if len(where_claus) > 0:
             query += ' where 1=1 ' + where_claus
         fetched_rows = fetch_list(query)

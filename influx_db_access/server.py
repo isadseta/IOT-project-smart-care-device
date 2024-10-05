@@ -139,6 +139,25 @@ class TempratureInfluxDbDal():
     def DELETE(self, *uri):
         pass
 
+def register_me():
+    global system_config
+    my_port = os.environ['IP_PORT']
+    my_address = os.environ['IP_ADDRESS']
+    service_catalog_address = os.environ['service_catalog'] + "/ServiceCatalog"
+    # registering on service catalog
+    current_service_information = {"service_name": "influx_db_access",
+                                   "service_value": f"http://{'127.0.0.1' if '0.0.0.0' in my_address else my_address}:{my_port}",
+                                   "last_state": "1"}
+    while True:
+        try:
+            service_result = requests.post(service_catalog_address, json.dumps(current_service_information))
+            print("==================================================================================")
+            print(service_result.text)
+            break
+        except Exception as ex:
+            print("==================================================================================")
+            print(f"Unsucceessfull registration on the server because of \n {ex}.")
+            time.sleep(5)
 
 if __name__ == '__main__':
     try:
@@ -178,6 +197,11 @@ if __name__ == '__main__':
         os.environ[
             'SCD_INFLUXDB_DAL_INFLUXDB_URL'] = 'http://127.0.0.1:8086'
     try:
+        if os.environ['service_catalog'] == None:
+            os.environ['service_catalog'] = 'http://127.0.0.1:50010'
+    except:
+        os.environ['service_catalog'] = 'http://127.0.0.1:50010'
+    try:
         if os.environ['SCD_INFLUXDB_DAL_INFLUXDB_URL'] == None:
             os.environ[
                 'SCD_INFLUXDB_DAL_ORG'] = 'IOT'
@@ -192,10 +216,13 @@ if __name__ == '__main__':
             'tools.sessions.on': True
         }
     }
+
+    register_me()
+
     cherrypy.tree.mount(HeartInfluxDbDal(), '/' + type(HeartInfluxDbDal()).__name__, conf)
     cherrypy.tree.mount(TempratureInfluxDbDal(), '/' + type(TempratureInfluxDbDal()).__name__, conf)
-    cherrypy.config.update({'server.socket_host': hearth_influx_db_dal.catalog.serviceIP})
-    cherrypy.config.update({'server.socket_port': int(hearth_influx_db_dal.catalog.servicePort)})
+    cherrypy.config.update({'server.socket_host': hearth_influx_db_dal.catalog.serviceCatalogIP})
+    cherrypy.config.update({'server.socket_port': int(hearth_influx_db_dal.catalog.serviceCatalogPort)})
     cherrypy.engine.start()
     #while True:
     #    time.sleep(1)
