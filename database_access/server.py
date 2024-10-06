@@ -129,7 +129,30 @@ class UsersDAL():
         return json.dumps(result)
 
     def PUT(self, *uri):
-        pass
+        select_id=uri[0]
+        data_to_insert = cherrypy.request.body.read()
+        converted_data = json.loads(data_to_insert)
+        if select_id.isnumeric()==False :
+            raise Exception("url params does not contains valid id to be updated.")
+        query=f'''
+        update users_table
+        SET  
+            user_name= '{converted_data["user_name"]}'
+            ,user_lastname = '{converted_data["user_lastname"]}'
+            ,user_email= N'{converted_data["user_email"]}'    
+            ,user_password='{converted_data["user_password"]}'
+            ,user_hashed_password='{converted_data["user_hashed_password"]}'
+            ,user_type='{converted_data["user_type"]}'
+        WHERE ID={select_id}'''
+        try:
+            execute_query(query)
+        except:
+            print("==================================================")
+            print("unsuccessfully query")
+            print(query)
+
+            return json.dumps(False)
+        return json.dumps(True)
 
     def DELETE(self, *uri):
         query = ""
@@ -233,7 +256,10 @@ class UsersDoctorsDAL():
     def GET(self, *uri, **params):
         for item in params:
             print(item)
-        query = 'SELECT id,docter_user_id,sick_user_id FROM users_doctors_table '
+        query = '''SELECT udr.id,docter_user_id,doctors.user_lastname||' '||doctors.user_name doctor_name,
+                   sick_user_id,sicks.user_lastname||' '||sicks.user_name sick_name FROM users_doctors_table udr
+                    inner join users_table doctors on doctors.id=udr.docter_user_id
+                    inner join users_table sicks on sicks.id = udr.sick_user_id'''
         where_claus = ""
         if 'user_type' in params.keys():
             where_claus += f" and docter_user_id = '{params['docter_user_id']}' "
@@ -244,7 +270,7 @@ class UsersDoctorsDAL():
         fetched_rows = fetch_list(query)
         result = []
         for item in fetched_rows:
-            result.append({"id": item[0], "docter_user_id": item[1], "sick_user_id": item[2]})
+            result.append({"id": item[0], "docter_user_id": item[1],"doctor_name":item[2], "sick_user_id": item[3],"sick_user_name":item[4]})
         return json.dumps(result, indent=4, sort_keys=True, default=str)
 
     def POST(self, *uri):
@@ -253,7 +279,7 @@ class UsersDoctorsDAL():
         query = (
                     " insert into users_doctors_table (docter_user_id,sick_user_id) values ('"
                     + converted_data["docter_user_id"] +
-                    "','" + converted_data["sick_user_id"] + ")")
+                    "','" + converted_data["sick_user_id"] + "')")
         print(query)
         result = execute_query(query)
         print(result)
@@ -261,7 +287,11 @@ class UsersDoctorsDAL():
 
     def PUT(self, *uri):
         pass
-
+    '''
+    1:delete only one user doctor relation
+    2:delete all of users doctor relations of doctor
+    3:delete all users doctor relations of users
+    '''
     def DELETE(self, *uri):
         operation_code=uri[0]
         selected_id = uri[1]

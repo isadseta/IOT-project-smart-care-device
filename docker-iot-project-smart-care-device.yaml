@@ -55,8 +55,8 @@ services:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: ComeToSchool1367
-  scd-relational-database-dao:
-    image: scd-postgress-dao
+  scd_relational_database_dao:
+    image: scd_postgress_dao
     restart: always
     ports:
       - 50000:50000
@@ -69,7 +69,7 @@ services:
       RD_port_number: 5432
       RD_time_out: 30
       IP_PORT: 50000
-      IP_ADDRESS: 0.0.0.0
+      IP_ADDRESS: scd_relational_database_dao
     depends_on:
       - "scd-relational-database-postgress"
   service_catalog:
@@ -80,10 +80,10 @@ services:
     environment:
       IP_PORT: 50010
       IP_ADDRESS: 0.0.0.0
-      scd_relational_database_dao: http://scd-relational-database-dao:50000
+      scd_relational_database_dao: http://scd_relational_database_dao:50000
       environment: RUNNING
     depends_on:
-      - "scd-relational-database-dao"
+      - "scd_relational_database_dao"
       - "scd-relational-database-postgress"
   scd_reporting:
     image:  scd_reporting
@@ -96,7 +96,21 @@ services:
       service_catalog: http://service_catalog:50010
     depends_on:
       - "service_catalog"
-      - "scd-relational-database-dao"
+      - "scd_relational_database_dao"
+      - "scd-influxdb-dal"
+      - "scd_influxdb"
+  resource_catalog:
+    image: resource_catalog
+    restart: always
+    ports:
+      - 50090:50090
+    environment:
+      IP_PORT: 50090
+      IP_ADDRESS: resource_catalog
+      service_catalog: http://service_catalog:50010
+    depends_on:
+      - "service_catalog"
+      - "scd_relational_database_dao"
       - "scd-influxdb-dal"
       - "scd_influxdb"
 

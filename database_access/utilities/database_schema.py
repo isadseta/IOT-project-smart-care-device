@@ -33,6 +33,7 @@ def tables_creation():
                 user_type int
             );
         """
+        #user_type=0:admin 1:doctor 2:sick 3:device 4:disabled
         execute_query(query,max_retry=50)
     except Exception as ex:
         print("=========================================================================================")
