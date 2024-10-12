@@ -8,6 +8,7 @@ import influxdb_client
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from utilities.service_class import BaseService
+import cherrypy_cors
 
 
 def initialize_influx_connection():
@@ -210,10 +211,12 @@ if __name__ == '__main__':
             'SCD_INFLUXDB_DAL_ORG'] = 'IOT'
     hearth_influx_db_dal = HeartInfluxDbDal()
     temprature_influx_db_dal = TempratureInfluxDbDal()
+    cherrypy_cors.install()
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.sessions.on': True
+            'tools.sessions.on': True,
+            'cors.expose.on': True,
         }
     }
 

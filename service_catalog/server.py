@@ -4,7 +4,7 @@ import requests
 import time
 import sys
 import os
-
+import cherrypy_cors
 from utilities.service_class import BaseService
 
 
@@ -15,10 +15,16 @@ class ServiceCatalog():
         self.catalog = BaseService()
 
     def GET(self, *uri, **params):
+        print("===================================")
+        print(uri)
         if len(uri)>0 and uri[0].lower()=="summary":
+            print("=================================== 2")
+            print(uri)
             service_url = os.environ["scd_relational_database_dao"] + "/SystemConfigDal"
             service_result = requests.get(service_url)
         else:
+            print("=================================== 3")
+            print(uri)
             service_url = os.environ["scd_relational_database_dao"] + "/ServiceDAL"
             service_result = requests.get(service_url)
         return service_result.text
@@ -39,9 +45,8 @@ class ServiceCatalog():
         service_result = requests.delete(service_url)
         return service_result.text
 
-
-
-
+def CORS():
+    cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
 if __name__ == '__main__':
     try:
         if os.environ['IP_ADDRESS'] == None:
@@ -65,12 +70,15 @@ if __name__ == '__main__':
     except:
         os.environ['scd_relational_database_dao'] = 'http://127.0.0.1:50000'
     relational_database_dal_service = ServiceCatalog()
+    cherrypy_cors.install()
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.sessions.on': True
+            'tools.sessions.on': True,
+            'cors.expose.on': True,
         }
     }
+    #cherrypy.tools.CORS = cherrypy.Tool('before_handler', CORS)
     cherrypy.tree.mount(ServiceCatalog(), '/' + type(ServiceCatalog()).__name__, conf)
     cherrypy.config.update({'server.socket_host': relational_database_dal_service.catalog.serviceCatalogIP})
     cherrypy.config.update({'server.socket_port': int(relational_database_dal_service.catalog.serviceCatalogPort)})

@@ -1,22 +1,31 @@
 import threading
-
 import cherrypy
 import json
 import requests
 import time
 import sys
 import os
-
+import cherrypy_cors
 from mosqitues_sample_reciever import run_reciever_in_threading
 from mosqitues_sample_sender import run_sender_in_threading, send_notification_on_mqtt
 from utilities.service_class import BaseService, system_config
 
 
+def cors_tool():
+    cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
+    cherrypy.response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    cherrypy.response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+
+
+cherrypy.tools.cors = cherrypy.Tool('before_handler', cors_tool)
+
+@cherrypy.tools.cors()
 class MessagingMicroservice(BaseService):
     exposed = True
 
     def __init__(self):
         self.catalog = BaseService()
+    @cherrypy.tools.cors()
     def get_user_all_messages(self,user_id):
         system_config = self.system_config()
         relational_database_access_url = system_config["relational_database_access"]["service_value"] + f"/MessagesDAL?reciever_id={user_id}"
@@ -28,6 +37,7 @@ class MessagingMicroservice(BaseService):
         messages=requests.get(relational_database_access_url)
         return messages.text
 
+    @cherrypy.tools.cors()
     def GET(self, *uri, **params):
         if uri[0]=="user":
             return self.get_user_all_messages(uri[1])
@@ -35,6 +45,7 @@ class MessagingMicroservice(BaseService):
             return self.get_user_all_messages(uri[1])
         return None
 
+    @cherrypy.tools.cors()
     #sample data to send message {"sende_user_id":"123456","reciever_user_id":"","message_content":"dfgss dfg sdfg sdfg sdfg sdfg sdfg sdfg sdfg dsfg"}
     def POST(self, *uri):
         try:
@@ -62,22 +73,51 @@ class MessagingMicroservice(BaseService):
 
     def PUT(self, *uri):
         pass
+    @cherrypy.tools.cors()
+    def OPTIONS(self, *args, **kwargs):
+        cherrypy.response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, PUT, DELETE"
+        cherrypy.response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return ''
 
-
+@cherrypy.tools.cors() 
 class NotificationsMicroservice(BaseService):
     exposed = True
 
     def __init__(self):
         self.catalog = BaseService()
-
+    @cherrypy.tools.cors() 
     def GET(self, *uri, **params):
+        try:
+            query_string_claus = "?qq=1"
+            if 'messagge_content' in params.keys():
+                query_string_claus += f"&messagge_content={params['messagge_content']}"
+            if 'sender_id' in params.keys():
+                query_string_claus += f"&sender_id={params['sender_id']}"
+            if 'reciever_id' in params.keys():
+                query_string_claus += f"&reciever_id={params['reciever_id']}"
+            if 'message_state' in params.keys():
+                query_string_claus += f"&message_state={params['message_state']}"
+            system_config = self.system_config()
+            relational_database_access_url = system_config["relational_database_access"]["service_value"] + "/MessagesDAL"+query_string_claus
+            save_message_result=requests.post(relational_database_access_url )
+            return save_message_result.text
+        except Exception as ex:
+            print(ex)
+            return ex
+    @cherrypy.tools.cors()
+    def OPTIONS(self, *args, **kwargs):
+        cherrypy.response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, PUT, DELETE"
+        cherrypy.response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return ''
+
+    def POST(self, *uri):
         try:
             data_to_insert = cherrypy.request.body.read()
             converted_data = json.loads(data_to_insert)
             sende_user_id = converted_data["sende_user_id"]
             reciever_user_id = converted_data["reciever_user_id"]
             message_content = converted_data["message_content"]
-            topic_to_send = f"notifications/{sende_user_id}/{reciever_user_id}/4"
+            topic_to_send = f"SCD_IOT_PROJECT/notifications/{sende_user_id}/{reciever_user_id}/4"
             send_notification_on_mqtt(topic_to_send, message_content)
             # =================Sending to microservice database
             system_config = self.system_config()
@@ -88,17 +128,11 @@ class NotificationsMicroservice(BaseService):
                 "messagge_content": message_content,
                 "message_state": "6"
             }
-            print(relational_database_access_url)
-            print(new_message_content)
-            print(json.dumps(new_message_content))
             save_message_result=requests.post(relational_database_access_url, json.dumps(new_message_content))
             return "True"
         except Exception as ex:
             print(ex)
             return ex
-
-    def POST(self, *uri):
-        pass
 
     def PUT(self, *uri):
         pass
@@ -166,18 +200,20 @@ if __name__ == '__main__':
         os.environ['service_catalog'] = 'http://localhost:50010'
 
     register_me()
-
+    # run_reciever_in_threading()
     x = threading.Thread(target=run_reciever_in_threading)
     x.start()
+    cherrypy_cors.install()
 
     relational_database_dal_service = NotificationsMicroservice()
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.sessions.on': True
+            'tools.sessions.on': True,
+            'cors.expose.on': True,
         }
-    }
-
+    } 
+    
     cherrypy.tree.mount(MessagingMicroservice(), '/' + type(MessagingMicroservice()).__name__, conf)
     cherrypy.tree.mount(NotificationsMicroservice(), '/' + type(NotificationsMicroservice()).__name__, conf)
     cherrypy.config.update({'server.socket_host': relational_database_dal_service.catalog.serviceCatalogIP})

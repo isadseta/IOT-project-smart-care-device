@@ -5,6 +5,7 @@ import time
 import sys
 import os
 import psycopg2
+import cherrypy_cors
 
 from utilities.database_schema import tables_creation
 from utilities.db_tools import fetch_list, execute_query, create_database_query
@@ -95,6 +96,8 @@ class UsersDAL():
             print(item)
         query = 'SELECT id,user_name,user_lastname,user_email,user_password,user_hashed_password,user_type FROM users_table '
         where_claus = ""
+        if 'id' in params.keys():
+            where_claus += f" and id = {params['id']} "
         if 'user_name' in params.keys():
             where_claus += f" and user_name like '%{params['user_name']}%' "
         if 'user_lastname' in params.keys():
@@ -201,10 +204,10 @@ class MessagesDAL():
         converted_data = json.loads(data_to_insert)
         query = (
                     " insert into messages_table (sender_id,reciever_id,messagge_content,message_state) values ("
-                    + converted_data["sender_id"] +
-                    "," + converted_data["reciever_id"] +
+                    + str(converted_data["sender_id"]) +
+                    "," + str(converted_data["reciever_id"]) +
                     ",N'" + converted_data["messagge_content"] +
-                    "'," + converted_data["message_state"] +")")
+                    "'," + str(converted_data["message_state"]) +")")
         print(query)
         result = execute_query(query)
         print(result)
@@ -261,9 +264,9 @@ class UsersDoctorsDAL():
                     inner join users_table doctors on doctors.id=udr.docter_user_id
                     inner join users_table sicks on sicks.id = udr.sick_user_id'''
         where_claus = ""
-        if 'user_type' in params.keys():
+        if 'docter_user_id' in params.keys():
             where_claus += f" and docter_user_id = '{params['docter_user_id']}' "
-        if 'user_type' in params.keys():
+        if 'sick_user_id' in params.keys():
             where_claus += f" and sick_user_id = '{params['sick_user_id']}' "
         if len(where_claus) > 0:
             query += ' where 1=1 ' + where_claus
@@ -274,12 +277,16 @@ class UsersDoctorsDAL():
         return json.dumps(result, indent=4, sort_keys=True, default=str)
 
     def POST(self, *uri):
+        print("===================================")
+        print("Updating users started")
         data_to_insert = cherrypy.request.body.read()
+        print(data_to_insert)
         converted_data = json.loads(data_to_insert)
+        print(converted_data)
         query = (
-                    " insert into users_doctors_table (docter_user_id,sick_user_id) values ('"
-                    + converted_data["docter_user_id"] +
-                    "','" + converted_data["sick_user_id"] + "')")
+                    " insert into users_doctors_table (docter_user_id,sick_user_id) values ("
+                    + str(converted_data["docter_user_id"]) +
+                    "," + str(converted_data["sick_user_id"]) + ")")
         print(query)
         result = execute_query(query)
         print(result)
@@ -377,10 +384,12 @@ if __name__ == '__main__':
     except:
         os.environ['service_catalog'] = 'http://localhost:50010'
     relational_database_dal_service = OtherClassDall()
+    cherrypy_cors.install()
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.sessions.on': True
+            'tools.sessions.on': True,
+            'cors.expose.on': True,
         }
     }
     #try:
@@ -391,6 +400,7 @@ if __name__ == '__main__':
     register_me()
     cherrypy.tree.mount(MessagesDAL(), '/' + type(MessagesDAL()).__name__, conf)
     cherrypy.tree.mount(UsersDAL(), '/' + type(UsersDAL()).__name__, conf)
+    cherrypy.tree.mount(UsersDoctorsDAL(), '/' + type(UsersDoctorsDAL()).__name__, conf)
     cherrypy.tree.mount(SystemConfigDal(), '/' + type(SystemConfigDal()).__name__, conf)
     cherrypy.tree.mount(ServiceDAL(), '/' + type(ServiceDAL()).__name__, conf)
     cherrypy.tree.mount(OtherClassDall(), '/' + type(OtherClassDall()).__name__, conf)

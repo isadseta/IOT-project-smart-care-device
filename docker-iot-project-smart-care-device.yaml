@@ -30,7 +30,7 @@ services:
     depends_on:
       - "scd_influxdb"
   scd-mosquitto:
-    image: eclipse-mosquitto
+    image: scd-mosquitto
     hostname: mosquitto
     container_name: mosquitto
     restart: unless-stopped
@@ -46,11 +46,11 @@ services:
     # set shared memory limit when using docker-compose
     shm_size: 128mb
     # or set shared memory limit when deploy via swarm stack
-    #volumes:
-    #  - type: tmpfs
-    #    target: /dev/shm
-    #    tmpfs:
-    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    volumes:
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 134217728 # 128*2^20 bytes = 128Mb
     ports:
       - 5432:5432
     environment:
@@ -113,5 +113,23 @@ services:
       - "scd_relational_database_dao"
       - "scd-influxdb-dal"
       - "scd_influxdb"
+  scd_notifications:
+    image: scd_notifications
+    restart: always
+    ports:
+      - 50110:50110
+    environment:
+      IP_PORT: 50110
+      IP_ADDRESS: scd_notifications
+      service_catalog: http://service_catalog:50010
+      environment: RUNNING
+      mosquitto_url: scd-mosquitto
+      mosquitto_port: 1883
+    depends_on:
+      - "service_catalog"
+      - "scd_relational_database_dao"
+      - "scd-influxdb-dal"
+      - "scd_influxdb"
+
 
 

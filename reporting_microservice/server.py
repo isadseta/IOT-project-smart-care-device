@@ -6,7 +6,7 @@ import requests
 import time
 import sys
 import os
-
+import cherrypy_cors
 from utilities.service_class import BaseService, system_config
 
 class MeaturmentsMicroservice(BaseService):
@@ -94,13 +94,15 @@ if __name__ == '__main__':
     except:
         os.environ['service_catalog'] = 'http://localhost:50010'
 
+    cherrypy_cors.install()
     register_me()
 
     relational_database_dal_service = MeaturmentsMicroservice()
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.sessions.on': True
+            'tools.sessions.on': True,
+            'cors.expose.on': True,
         }
     }
 
