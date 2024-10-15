@@ -161,6 +161,41 @@ def register_me():
             print(f"Unsucceessfull registration on the server because of \n {ex}.")
             time.sleep(5)
 
+def register_mqtt_configs():
+    global system_config
+    mosquitto_port = os.environ['mosquitto_port']
+    mosquitto_address = os.environ['mosquitto_url']
+    service_catalog_address = os.environ['service_catalog'] + "/ServiceCatalog"
+    # registering on service catalog
+    mosquitto_server_information = {"service_name": "mosquitto_url",
+                                   "service_value": mosquitto_address,
+                                   "last_state": "1"}
+    mosquitto_port_server_information = {"service_name": "mosquitto_port",
+                                   "service_value": mosquitto_port,
+                                   "last_state": "1"}
+    while True:
+        try:
+            service_result = requests.post(service_catalog_address, json.dumps(mosquitto_server_information))
+            print("==================================================================================")
+            print("Successfull registeration of mosquitto server url ")
+            print(service_result.text)
+            break
+        except Exception as ex:
+            print("==================================================================================")
+            print(f"Unsucceessfull registration on the mosquitto server because of \n {ex}.")
+            time.sleep(5)
+    while True:
+        try:
+            service_result = requests.post(service_catalog_address, json.dumps(mosquitto_port_server_information))
+            print("==================================================================================")
+            print("Successfull registeration of mosquitto server port ")
+            print(service_result.text)
+            break
+        except Exception as ex:
+            print("==================================================================================")
+            print(f"Unsucceessfull registration on the mosquitto server port because of \n {ex}.")
+            time.sleep(5)
+
 
 if __name__ == '__main__':
 
@@ -200,6 +235,7 @@ if __name__ == '__main__':
         os.environ['service_catalog'] = 'http://localhost:50010'
 
     register_me()
+    register_mqtt_configs()
     # run_reciever_in_threading()
     x = threading.Thread(target=run_reciever_in_threading)
     x.start()

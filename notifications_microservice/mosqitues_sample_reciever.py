@@ -77,11 +77,11 @@ def process_measurment(topic,message):
 def process_notification(topic,message):
     pass
 def on_message(client, userdata, msg):
-    topic_parts=msg.topic.split("/")
-    if topic_parts[1]=="measurments":
-        process_measurment(msg.topic,msg.payload.decode())
-    else:
-        process_notification(msg.topic,msg.payload.decode())
+    # topic_parts=msg.topic.split("/")
+    # if topic_parts[1]=="measurments":
+    #     process_measurment(msg.topic,msg.payload.decode())
+    # else:
+    #     process_notification(msg.topic,msg.payload.decode())
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 def subscribe(client: mqtt_client):
     client.subscribe(measurment_topic+"#")
@@ -131,6 +131,10 @@ def run_reciever_in_threading():
             print(ex)
 
 if __name__ == '__main__':
+    broker = "127.0.0.1"
+    port = 1883
+    measurment_topic ="SCD_IOT_PROJECT/measurments/"
+    notifications_topic ="SCD_IOT_PROJECT/notifications/"
     run()
 #
 # import sys

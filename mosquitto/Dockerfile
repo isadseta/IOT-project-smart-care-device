@@ -52,6 +52,7 @@ ENV MOSQUITTO_CONFIG /etc/mosquitto/mosquitto.conf
 
 # Expose the Mosquitto port (adjust as needed)
 EXPOSE 1883
+EXPOSE 1893
 
 # Define the entrypoint for the container
 CMD ["mosquitto", "-v", "-c", "/etc/mosquitto/mosquitto.conf"]

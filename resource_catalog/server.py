@@ -256,9 +256,9 @@ if __name__ == '__main__':
         os.environ['IP_ADDRESS'] = "0.0.0.0"
     try:
         if os.environ['IP_PORT'] == None:
-            os.environ['IP_PORT'] = "50090"
+            os.environ['IP_PORT'] = "60090"
     except:
-        os.environ['IP_PORT'] = "50090"
+        os.environ['IP_PORT'] = "60090"
     try:
         if os.environ['environment'] == None:
             os.environ['environment'] = 'debugging'
@@ -282,7 +282,8 @@ if __name__ == '__main__':
     register_me()
 
     cherrypy.tools.cors = cherrypy.Tool('before_handler', cors_tool)
-
+    print("=======================================================================")
+    print("starting  the server.")
     cherrypy.tree.mount(LoginService(), '/' + type(LoginService()).__name__, conf)
     cherrypy.tree.mount(UsersManagerService(), '/' + type(UsersManagerService()).__name__, conf)
     cherrypy.tree.mount(DeviceManagerService(), '/' + type(DeviceManagerService()).__name__, conf)

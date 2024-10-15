@@ -64,9 +64,6 @@ def on_message(client, userdata, msg):
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
 
-def subscribe(client: mqtt_client):
-    client.subscribe(topic)
-    client.on_message = on_message
 
 
 def publish(client, topic, msg=None):
@@ -83,19 +80,26 @@ def publish(client, topic, msg=None):
         status = result[0]
         if status == 0:
             print(f"Send `{msg}` to topic `{topic}`")
-            break
         else:
             print(f"Failed to send message to topic {topic}")
         msg_count += 1
-        if msg_count > 1:
+        if msg_count > 555:
             break
 
 
 def run():
+    global broker
+    global port
+    global measurment_topic
+    global notifications_topic
+    broker = "ws:\\\\127.0.0.1"
+    port = 1893
+    measurment_topic ="SCD_IOT_PROJECT/measurments/"
+    notifications_topic ="SCD_IOT_PROJECT/notifications/"
     client = connect_mqtt()
     client.loop_start()
-    subscribe(client)
-    publish(client,topic+"4/8/temprature")
+    publish(client,measurment_topic+"SCD_IOT_PROJECT/notifications/1/1/")
+    publish(client,measurment_topic+"SCD_IOT_PROJECT/notifications/1/1/")
     client.loop_stop()
 
 
