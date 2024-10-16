@@ -94,7 +94,7 @@ class UsersDAL():
     def GET(self, *uri, **params):
         for item in params:
             print(item)
-        query = 'SELECT id,user_name,user_lastname,user_email,user_password,user_hashed_password,user_type FROM users_table '
+        query = 'SELECT id,user_name,user_lastname,user_email,user_password,user_hashed_password,user_type,user_telegram_bot_id FROM users_table '
         where_claus = ""
         if 'id' in params.keys():
             where_claus += f" and id = {params['id']} "
@@ -102,6 +102,8 @@ class UsersDAL():
             where_claus += f" and user_name like '%{params['user_name']}%' "
         if 'user_lastname' in params.keys():
             where_claus += f" and user_lastname like '%{params['user_lastname']}%' "
+        if 'user_telegram_bot_id' in params.keys():
+            where_claus += f" and user_telegram_bot_id like '%{params['user_telegram_bot_id']}%' "
         if 'user_email' in params.keys():
             where_claus += f" and user_email like '%{params['user_email']}%' "
         if 'user_type' in params.keys():
@@ -112,20 +114,21 @@ class UsersDAL():
         result = []
         for item in fetched_rows:
             result.append({"id": item[0], "user_name": item[1], "user_lastname": item[2], "user_email": item[3],
-                           "user_password": item[4], "user_hashed_password": item[5], "user_type": item[6]})
+                           "user_password": item[4], "user_hashed_password": item[5], "user_type": item[6],"user_telegram_bot_id":item[7]})
         return json.dumps(result, indent=4, sort_keys=True, default=str)
 
     def POST(self, *uri):
         data_to_insert = cherrypy.request.body.read()
         converted_data = json.loads(data_to_insert)
         query = (
-                    " insert into users_table (user_name,user_lastname,user_email,user_password,user_hashed_password,user_type) values ('"
+                    " insert into users_table (user_name,user_lastname,user_email,user_password,user_hashed_password,user_type,user_telegram_bot_id) values ('"
                     + converted_data["user_name"] +
                     "','" + converted_data["user_lastname"] +
                     "','" + converted_data["user_email"] +
                     "','" + converted_data["user_password"] +
                     "','" + converted_data["user_hashed_password"] +
-                    "'," + converted_data["user_type"] + ")")
+                    "'," + converted_data["user_type"] +
+                    ",'" + converted_data["user_telegram_bot_id"] + "' )")
         print(query)
         result = execute_query(query)
         print(result)
@@ -146,6 +149,7 @@ class UsersDAL():
             ,user_password='{converted_data["user_password"]}'
             ,user_hashed_password='{converted_data["user_hashed_password"]}'
             ,user_type='{converted_data["user_type"]}'
+            ,user_telegram_bot_id='{converted_data["user_telegram_bot_id"]}'
         WHERE ID={select_id}'''
         try:
             execute_query(query)

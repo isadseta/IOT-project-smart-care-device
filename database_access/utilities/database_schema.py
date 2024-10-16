@@ -27,6 +27,7 @@ def tables_creation():
                 id bigint generated always as identity (minvalue 0),
                 user_name varchar,
                 user_lastname varchar, 
+                user_telegram_bot_id varchar, 
                 user_email varchar,
                 user_password varchar,
                 user_hashed_password varchar,
