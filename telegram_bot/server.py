@@ -1,10 +1,11 @@
-# telegram authetication finished
+# Running out of telegram services for user
 from telebot import TeleBot
 from telebot.types import InlineKeyboardButton,InlineKeyboardMarkup
 import os
 import requests
 import urllib
 import time,json
+from io import BytesIO
 
 
 def change_domain_name(url):
@@ -82,14 +83,12 @@ def send_welcome(message):
             inline_keyboard=InlineKeyboardMarkup(row_width=2)
             inline_keyboard.add(button1,button2)
             bot.send_message(message.chat.id, "Choose an option:", reply_markup=inline_keyboard)
-            bot.register_next_step_handler(message, handle_doctor_select_operation)
         else:
             button1 = InlineKeyboardButton(text="My report", callback_data="Sick_person_report")
             button2 = InlineKeyboardButton(text="Send message", callback_data="send_message")
             inline_keyboard=InlineKeyboardMarkup(row_width=2)
             inline_keyboard.add(button1,button2)
             bot.send_message(message.chat.id, "Choose an option:", reply_markup=inline_keyboard)
-            bot.register_next_step_handler(message, handle_sick_person_select_operation)
     else:
         bot.send_message(message.chat.id, "Please enter your SCD username and password seprated by &")
         bot.register_next_step_handler(message, handle_authentication)
@@ -126,51 +125,88 @@ def send_welcome(message):
         bot.send_message(message.chat.id, "Wrong credentials. \n Please enter your SCD username and password seprated by &")
         bot.register_next_step_handler(message, handle_authentication)
 def handle_doctor_select_operation(message,operation):
-    print("1")
     resource_catalog=system_config_loader()["relational_database_access"]["service_value"]
-    print("2")
     resource_catalog=change_domain_name(resource_catalog)
-    print("3")
     current_user_with_chat_id=requests.get(resource_catalog+f"/UsersDAL?user_telegram_bot_id={message.chat.id}").json()
-    print("4")
     if operation=="doctor_send_message":
-        print("5")
         resource_catalog=system_config_loader()["resource_catalog"]["service_value"]
-        print("6")
         resource_catalog=change_domain_name(resource_catalog)
-        print("7")
-        print(resource_catalog+f"/UsersDoctorsRelationService?docter_user_id={current_user_with_chat_id[0]['id']}")
-        list_of_sick_person=requests.get(resource_catalog+f"/UsersDoctorsRelationService&docter_user_id={current_user_with_chat_id[0]['id']}").text
-        print(list_of_sick_person)
+        list_of_sick_person=requests.get(resource_catalog+f"/UsersDoctorsRelationService?docter_user_id={current_user_with_chat_id[0]['id']}").text
         list_of_sick_person=json.loads(list_of_sick_person)
-        print(list_of_sick_person)
-        print("81")
         inline_keyboard=InlineKeyboardMarkup(row_width=2)
-        print("9")
         for sick_person in list_of_sick_person:
-            button = InlineKeyboardButton(text=f"{sick_person['sick_user_name']}", callback_data=f"{sick_person['sick_user_id']}")
+            button = InlineKeyboardButton(text=f"{sick_person['sick_user_name']}", callback_data=f"{'doctor_send_message_to|'+str(sick_person['sick_user_id'])+'|'+str(current_user_with_chat_id[0]['id'])}")
             inline_keyboard.add(button)
-        print("11")
         bot.send_message(message.chat.id, "Choose an person:", reply_markup=inline_keyboard)
-        print("12")
-        bot.register_next_step_handler(message, handle_doctor_select_operation_send_message)
     else:
         resource_catalog=system_config_loader()["resource_catalog"]["service_value"]
         resource_catalog=change_domain_name(resource_catalog)
-        list_of_sick_person=requests.get(resource_catalog+f"/UsersDoctorsRelationService&docter_user_id={current_user_with_chat_id[0].id}").json()
-        inline_keyboard=InlineKeyboardMarkup(row_width=2)
+        list_of_sick_person=requests.get(resource_catalog+f"/UsersDoctorsRelationService?docter_user_id={current_user_with_chat_id[0]['id']}").text
+        list_of_sick_person=json.loads(list_of_sick_person)
+        inline_keyboard=InlineKeyboardMarkup(row_width=3)
         for sick_person in list_of_sick_person:
-            button = InlineKeyboardButton(text=f"{sick_person['sick_user_name']}", callback_data=f"{sick_person['sick_user_id']}")
+            button = InlineKeyboardButton(text=f"{sick_person['sick_user_name']}", callback_data=f"{'doctor_review_report_of|'+str(sick_person['sick_user_id'])}")
             inline_keyboard.add(button)
         bot.send_message(message.chat.id, "Choose an person:", reply_markup=inline_keyboard)
-        bot.register_next_step_handler(message, handle_doctor_select_operation_send_report)
 
 
 
-def handle_doctor_select_operation_send_message(message):
+def handle_doctor_send_message_type_message(message,operation):
+    destination_user=operation.split("|")[1]
+    source_user = operation.split("|")[2]
+    print("source user : "+source_user)
+    print( "destination user : "+destination_user)
+    bot.send_message(message.chat.id, "type a message to send")
+    bot.register_next_step_handler(message, send_message_to_user,source_user,destination_user)
+
+def send_message_to_user(message,source_user,destination_user):
+    print(source_user)
+    print(destination_user)
+    print(message.text)
+
+    send_message_body='{"sende_user_id":'+source_user+',"reciever_user_id":'+destination_user+',"message_content":"'+message.text+'"}'
+
+    notification_server_url=system_config_loader()["notifications"]["service_value"]
+    notification_server_url=change_domain_name(notification_server_url)
+    notification_server_url=notification_server_url+"/MessagingMicroservice"
+    requests.post(notification_server_url,send_message_body)
+    bot.send_message(message.chat.id, f"message from {source_user} to {destination_user} sent with content {message.text}")
+    send_welcome(message)
+
+def handle_doctor_send_message_send_message(message,source_user,destination_user):
     pass
-def handle_doctor_select_operation_send_report(message):
-    pass
+def handle_doctor_select_operation_send_report(message,operation):
+    destination_user=operation.split("|")[1]
+    print("docter need report of sick person ")
+    print(destination_user)
+
+    reporting_server_url=system_config_loader()["reporting"]["service_value"]
+    reporting_server_url=change_domain_name(reporting_server_url)
+    mock_heart_body_temprature=reporting_server_url+"/MockSampleBodyTemprature"
+
+    mock_heart_rate_url=reporting_server_url+"/MockSampleHeartChart"
+    image_url = mock_heart_body_temprature  # Replace with the actual image URL
+    response = requests.get(image_url)
+    print(image_url)
+    if response.status_code == 200:
+        # Fetch image from URL and send it
+        image_data = BytesIO(response.content)
+        bot.send_photo(message.chat.id, photo=image_data)
+    else:
+        bot.send_message(message.chat.id, "Failed to fetch the image from the URL.")
+
+    image_url = mock_heart_rate_url  # Replace with the actual image URL
+    response = requests.get(image_url)
+
+    print(image_url)
+    if response.status_code == 200:
+        # Fetch image from URL and send it
+        image_data = BytesIO(response.content)
+        bot.send_photo(message.chat.id, photo=image_data)
+    else:
+        bot.send_message(message.chat.id, "Failed to fetch the image from the URL.")
+
+    send_welcome(message)
 
 def handle_sick_person_select_operation(message):
     pass
@@ -188,6 +224,10 @@ def callback_query(call):
         handle_doctor_select_operation(call.message,call.data)
     elif call.data == "doctor_send_message":
         handle_doctor_select_operation(call.message,call.data)
-
-
+    elif call.data.startswith("doctor_send_message_to"):
+        handle_doctor_send_message_type_message(call.message,call.data)
+    elif call.data.startswith("doctor_review_report_of"):
+        handle_doctor_select_operation_send_report(call.message,call.data)
+    else:
+        send_welcome(call.message)
 bot.polling()
