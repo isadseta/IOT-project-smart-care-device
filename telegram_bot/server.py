@@ -1,4 +1,4 @@
-#telegram bot completed
+#CONNECTING TELEGRAM TO MQTT
 import sys
 import threading
 from telebot import TeleBot
