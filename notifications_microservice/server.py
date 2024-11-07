@@ -9,7 +9,7 @@ import cherrypy_cors
 from mosqitues_sample_reciever import run_reciever_in_threading
 from mosqitues_sample_sender import run_sender_in_threading, send_notification_on_mqtt
 from utilities.service_class import BaseService, system_config
-
+import sys
 
 def cors_tool():
     cherrypy.response.headers["Access-Control-Allow-Origin"] = "*"
@@ -54,7 +54,7 @@ class MessagingMicroservice(BaseService):
             sende_user_id = converted_data["sende_user_id"]
             reciever_user_id = converted_data["reciever_user_id"]
             message_content = converted_data["message_content"]
-            topic_to_send = f"notifications/{sende_user_id}/{reciever_user_id}/4"
+            topic_to_send = f"SCD_IOT_PROJECT/notifications/{sende_user_id}/{reciever_user_id}/4"
             send_notification_on_mqtt(topic_to_send, message_content)
             # =================Sending to microservice database
             system_config = self.system_config()
@@ -236,9 +236,13 @@ if __name__ == '__main__':
 
     register_me()
     register_mqtt_configs()
+
     # run_reciever_in_threading()
-    x = threading.Thread(target=run_reciever_in_threading)
-    x.start()
+    mqtt_reviever_thread = threading.Thread(target=run_reciever_in_threading)
+    mqtt_reviever_thread.start()
+    sys.stdout.flush()
+
+
     cherrypy_cors.install()
 
     relational_database_dal_service = NotificationsMicroservice()

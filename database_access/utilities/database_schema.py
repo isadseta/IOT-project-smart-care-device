@@ -41,6 +41,24 @@ def tables_creation():
         print(ex)
         print("Users creation failed")
         print(query)
+    try:
+        query = """
+                    
+            INSERT INTO users_table
+                ( user_name,user_lastname,user_email,user_password,user_hashed_password,user_type,user_telegram_bot_id)
+            SELECT  'admin','admin','admin@admin.com','123456','123456',0,''
+            WHERE
+                NOT EXISTS (
+                    SELECT id FROM users_table WHERE user_email = 'admin@admin.com'
+                );
+        """
+        #user_type=0:admin 1:doctor 2:sick 3:device 4:disabled
+        execute_query(query,max_retry=50)
+    except Exception as ex:
+        print("=========================================================================================")
+        print(ex)
+        print("Users creation failed")
+        print(query)
 #Messaging Table
     try:
         query = """

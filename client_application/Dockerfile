@@ -1,6 +1,6 @@
 FROM python:3.10-slim-bullseye
 
- 
+
 #COPY pass /etc/mosquitto/
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \

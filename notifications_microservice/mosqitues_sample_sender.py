@@ -86,14 +86,32 @@ def publish(client, topic, msg=None):
         if msg_count > 555:
             break
 
+def publishOneTime(client, topic, msg):
+    msg_count = 1
+    while True:
+        result=None
+        time.sleep(1)
+        result = client.publish(topic, msg)
+
+        # result: [0, 1]
+        status = result[0]
+        if status == 0:
+            print(f"Send `{msg}` to topic `{topic}`")
+            break
+        else:
+            print(f"Failed to send message to topic {topic}")
+        msg_count += 1
+        if msg_count > 5:
+            break
+
 
 def run():
     global broker
     global port
     global measurment_topic
     global notifications_topic
-    broker = "ws:\\\\127.0.0.1"
-    port = 1893
+    broker = ""
+    port = 1883
     measurment_topic ="SCD_IOT_PROJECT/measurments/"
     notifications_topic ="SCD_IOT_PROJECT/notifications/"
     client = connect_mqtt()
@@ -117,7 +135,7 @@ def send_notification_on_mqtt(topic, msg):
     print("2")
     client.loop_start()
     print("3")
-    publish(client, topic, msg)
+    publishOneTime(client, topic, msg)
     print("4")
     client.loop_stop()
     print("5")

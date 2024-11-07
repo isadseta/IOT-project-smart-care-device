@@ -93,7 +93,7 @@ services:
       - 50070:50070
     environment:
       IP_PORT: 50070
-      IP_ADDRESS: 0.0.0.0
+      IP_ADDRESS: scd_reporting
       service_catalog: http://service_catalog:50010
     depends_on:
       - "service_catalog"

@@ -48,16 +48,20 @@ def on_connect(client, userdata, flags, rc):
     else:
         print("Failed to connect, return code %d\n", rc)
 def connect_mqtt():
-    client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION2,client_id)
-    # client.username_pw_set("sa", "ComeToSchool1367")
+    client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION1,client_id)
+    print(client_id)
+    client.username_pw_set("sa", "1")
     #client.on_connect = on_connect
+    print("=====================================================")
+    print(broker)
+    print(port)
     client.connect(broker, port)
     return client
 
 def process_measurment(topic,message): 
     current_system_config=system_config_loader() 
     influx_db_access_microservice_service_address=current_system_config['influx_db_access']['service_value'] 
-    notifications_microservice_service_address=current_system_config['notifications']['service_value'] 
+    #notifications_microservice_service_address=current_system_config['notifications']['service_value']
     topic_parts = topic.split('/') 
     meassurment_type=topic_parts[4] 
     meassurment_user_id=topic_parts[2] 
@@ -67,7 +71,7 @@ def process_measurment(topic,message):
     else:
         influx_db_access_microservice_service_address+="/HeartInfluxDbDal" 
     data_to_send={"user_id":meassurment_user_id,"sensor_id":meassurment_device_id,"value":message}
-    influx_db_access_microservice_service_address=influx_db_access_microservice_service_address.replace("scd-influxdb-dal","127.0.0.1")
+    #influx_db_access_microservice_service_address=influx_db_access_microservice_service_address.replace("scd-influxdb-dal","127.0.0.1")
     post_result=requests.post(influx_db_access_microservice_service_address,json.dumps(data_to_send))
     print("10")
     print(influx_db_access_microservice_service_address)
@@ -77,16 +81,18 @@ def process_measurment(topic,message):
 def process_notification(topic,message):
     pass
 def on_message(client, userdata, msg):
-    # topic_parts=msg.topic.split("/")
-    # if topic_parts[1]=="measurments":
-    #     process_measurment(msg.topic,msg.payload.decode())
-    # else:
-    #     process_notification(msg.topic,msg.payload.decode())
+    topic_parts=msg.topic.split("/")
+    if topic_parts[1]=="measurments":
+        process_measurment(msg.topic,msg.payload.decode())
+    else:
+        process_notification(msg.topic,msg.payload.decode())
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 def subscribe(client: mqtt_client):
     client.subscribe(measurment_topic+"#")
     client.subscribe(notifications_topic+"#")
     client.on_message = on_message
+    time.sleep(33)
+
     print("subscribed successfully.")
 
 def publish(client):
@@ -131,8 +137,17 @@ def run_reciever_in_threading():
             print(ex)
 
 if __name__ == '__main__':
+
+    try:
+        if os.environ['service_catalog'] == None:
+            os.environ['service_catalog'] = 'http://localhost:50010'
+    except:
+        os.environ['service_catalog'] = 'http://localhost:50010'
+
     broker = "127.0.0.1"
     port = 1883
+    # broker = os.environ["mosquitto_url"]
+    # port = int(os.environ["mosquitto_port"])
     measurment_topic ="SCD_IOT_PROJECT/measurments/"
     notifications_topic ="SCD_IOT_PROJECT/notifications/"
     run()

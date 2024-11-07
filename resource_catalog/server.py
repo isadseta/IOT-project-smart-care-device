@@ -84,11 +84,11 @@ class DeviceManagerService(BaseService):
         ralational_database_access_url = system_config["relational_database_access"][
                                              "service_value"] + f"/UsersDAL?def_param=1"
         ralational_database_access_url += f"&user_name=scd_device"
-        if 'user_lastname' in params.keys():
+        if 'device_id' in params.keys():
             ralational_database_access_url += f"&user_lastname={params['device_id']}"
-        if 'user_email' in params.keys():
+        if 'device_owner_id' in params.keys():
             ralational_database_access_url += f"&user_email={params['device_owner_id']}"
-        ralational_database_access_url += f"&user_type=3"
+        ralational_database_access_url += f"&user_type=4"
         selected_users = requests.get(ralational_database_access_url).text
         return selected_users
     @cherrypy.tools.cors()
@@ -102,7 +102,8 @@ class DeviceManagerService(BaseService):
         converted_posted_data["user_email"] = converted_posted_data["device_owner_id"]
         converted_posted_data["user_password"] = "------------"
         converted_posted_data["user_hashed_password"] = "------------"
-        converted_posted_data["user_type"] = "3"
+        converted_posted_data["user_type"] = "4"
+        converted_posted_data["user_telegram_bot_id"] = "-------------"
         sending_data_result = requests.post(relational_database_access_url, json.dumps(converted_posted_data))
         return sending_data_result.text
 
@@ -118,7 +119,7 @@ class DeviceManagerService(BaseService):
         converted_posted_data["user_email"] = converted_posted_data["device_owner_id"]
         converted_posted_data["user_password"] = "------------"
         converted_posted_data["user_hashed_password"] = "------------"
-        converted_posted_data["user_type"] = "3"
+        converted_posted_data["user_type"] = "4"
         sending_data_result = requests.put(relational_database_access_url, json.dumps(converted_posted_data))
         return sending_data_result.text
 
