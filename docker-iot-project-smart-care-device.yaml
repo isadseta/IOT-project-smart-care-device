@@ -27,6 +27,8 @@ services:
       - IP_ADDRESS=scd-influxdb-dal
       - IP_PORT=50030
       - service_catalog=http://service_catalog:50010
+      - mosquitto_url=scd-mosquitto
+      - mosquitto_port=1883
     depends_on:
       - "scd_influxdb"
   scd-mosquitto:

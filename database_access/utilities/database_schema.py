@@ -31,7 +31,11 @@ def tables_creation():
                 user_email varchar,
                 user_password varchar,
                 user_hashed_password varchar,
-                user_type int
+                user_type int,
+                min_heart_rate decimal DEFAULT NULL,
+                max_heart_rate decimal DEFAULT NULL,
+                min_body_temprature decimal DEFAULT NULL,
+                max_body_temprature decimal DEFAULT NULL
             );
         """
         #user_type=0:admin 1:doctor 2:sick 3:device 4:disabled
