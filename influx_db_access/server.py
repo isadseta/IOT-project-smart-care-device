@@ -1,3 +1,5 @@
+import threading
+
 import cherrypy
 import json
 import requests
@@ -8,6 +10,7 @@ import influxdb_client
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from utilities.service_class import BaseService
+from mosqitues_sample_reciever import run_reciever_in_threading
 import cherrypy_cors
 
 
@@ -161,6 +164,20 @@ def register_me():
             time.sleep(5)
 
 if __name__ == '__main__':
+
+    try:
+        if os.environ['mosquitto_url'] == None:
+            os.environ['mosquitto_url'] = "127.0.0.1"
+    except:
+        os.environ['mosquitto_url'] = "127.0.0.1"
+
+
+    try:
+        if os.environ['mosquitto_port'] == None:
+            os.environ['mosquitto_port'] = "1883"
+    except:
+        os.environ['mosquitto_port'] = "1883"
+
     try:
         if os.environ['IP_ADDRESS'] == None:
             os.environ['IP_ADDRESS'] = "0.0.0.0"
@@ -221,6 +238,9 @@ if __name__ == '__main__':
     }
 
     register_me()
+    # run_reciever_in_threading()
+    x = threading.Thread(target=run_reciever_in_threading)
+    x.start()
 
     cherrypy.tree.mount(HeartInfluxDbDal(), '/' + type(HeartInfluxDbDal()).__name__, conf)
     cherrypy.tree.mount(TempratureInfluxDbDal(), '/' + type(TempratureInfluxDbDal()).__name__, conf)

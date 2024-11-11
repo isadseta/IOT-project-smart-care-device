@@ -6,17 +6,14 @@ import requests
 from paho.mqtt import client as mqtt_client
 import datetime
 import json
-
 broker = ""
-last_config_load = None
+last_config_load=None
 port = 0
-measurment_topic = ""
-notifications_topic = ""
-system_config = None
+measurment_topic =""
+notifications_topic =""
+system_config=None
 # Generate a Client ID with the publish prefix.
 client_id = f'publish-{random.randint(0, 1000)}'
-
-
 # username = 'emqx'
 # password = 'public'
 def reload_config():
@@ -35,7 +32,6 @@ def reload_config():
             print(f"Unsucceessfull loading cofiguration because of \n {ex}.")
             time.sleep(5)
 
-
 def system_config_loader():
     global system_config
     reload_config()
@@ -45,70 +41,41 @@ def system_config_loader():
         system_config_as_cixtionary[service_item["service_name"]] = service_item
     print(system_config_as_cixtionary)
     return system_config_as_cixtionary
-
-
 def on_connect(client, userdata, flags, rc):
     print("Connecting operation started...")
     if rc == 0:
         print("Connected to MQTT Broker!")
     else:
         print("Failed to connect, return code %d\n", rc)
-
-
 def connect_mqtt():
-    client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION2, client_id)
+    client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION2,client_id)
     # client.username_pw_set("sa", "ComeToSchool1367")
-    # client.on_connect = on_connect
+    #client.on_connect = on_connect
     client.connect(broker, port)
     return client
 
-
-def process_measurment(topic, message):
-    current_system_config = system_config_loader()
-    influx_db_access_microservice_service_address = current_system_config['influx_db_access']['service_value']
-    notifications_microservice_service_address = current_system_config['notifications']['service_value']
-    user_information_service_url = current_system_config['resource_catalog']['service_value']
-    topic_parts = topic.split('/')
-    meassurment_type = topic_parts[4]
-    meassurment_user_id = topic_parts[2]
-    meassurment_device_id = topic_parts[3]
-    user_information_service_url += "/UsersManagerService?id=" + meassurment_user_id
-    user_information = requests.get(user_information_service_url).json()
-    messurment_value = float(message)
-    need_messaging = False
-    if user_information["max_body_temprature"]== None or user_information["max_body_temperature"]== "" or user_information["min_body_temprature"]== None or user_information["min_body_temprature"]== "":
-        return
-
-    if user_information["max_heart_rate"]== None or user_information["max_heart_rate"]== "" or user_information["min_heart_rate"]== None or user_information["min_heart_rate"]== "":
-        return
-
-    if meassurment_type == "temprature":
-        if user_information["max_body_temprature"] < messurment_value or user_information[
-            "min_body_temprature"] > messurment_value:
-            need_messaging = True
+def process_measurment(topic,message): 
+    current_system_config=system_config_loader() 
+    influx_db_access_microservice_service_address=current_system_config['influx_db_access']['service_value'] 
+    notifications_microservice_service_address=current_system_config['notifications']['service_value'] 
+    topic_parts = topic.split('/') 
+    meassurment_type=topic_parts[4] 
+    meassurment_user_id=topic_parts[2] 
+    meassurment_device_id=topic_parts[3] 
+    if meassurment_type=="temprature":
+        influx_db_access_microservice_service_address+="/TempratureInfluxDbDal"
     else:
-        if user_information["max_heart_rate"] < messurment_value or user_information[
-            "min_heart_rate"] > messurment_value:
-            need_messaging = True
-    if need_messaging :
-        message_content=f'urgent state for user {user_information["user_lastname"]} {user_information["user_name"]} \n this message is automatically generated and sent by system.'
-        user_information_service_url=  current_system_config['resource_catalog']['service_value']
-        user_information_service_url+="/UsersDoctorsRelationService?sick_user_id="+str(meassurment_user_id)
-        doctor_information = requests.get(user_information_service_url).json()
-        docter_user_id=doctor_information["docter_user_id"]
-        notification_message_content=f'{"sende_user_id":"{meassurment_user_id}","reciever_user_id":"{docter_user_id}","message_content":"{message_content}"}'
-        notifications_microservice_service_address+='/MessagingMicroservice'
-        post_result=requests.post(notifications_microservice_service_address, data=notification_message_content)
-    # data_to_send={"user_id":meassurment_user_id,"sensor_id":meassurment_device_id,"value":message}
-    # influx_db_access_microservice_service_address=influx_db_access_microservice_service_address.replace("scd-influxdb-dal","127.0.0.1")
-    # post_result=requests.post(influx_db_access_microservice_service_address,json.dumps(data_to_send))
+        influx_db_access_microservice_service_address+="/HeartInfluxDbDal" 
+    data_to_send={"user_id":meassurment_user_id,"sensor_id":meassurment_device_id,"value":message}
+    influx_db_access_microservice_service_address=influx_db_access_microservice_service_address.replace("scd-influxdb-dal","127.0.0.1")
+    post_result=requests.post(influx_db_access_microservice_service_address,json.dumps(data_to_send))
     print("10")
-
-
-def process_notification(topic, message):
+    print(influx_db_access_microservice_service_address)
+    print(json.dumps(data_to_send))
+    print(post_result)
+    
+def process_notification(topic,message):
     pass
-
-
 def on_message(client, userdata, msg):
     # topic_parts=msg.topic.split("/")
     # if topic_parts[1]=="measurments":
@@ -116,14 +83,11 @@ def on_message(client, userdata, msg):
     # else:
     #     process_notification(msg.topic,msg.payload.decode())
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
-
-
 def subscribe(client: mqtt_client):
-    client.subscribe(measurment_topic + "#")
-    client.subscribe(notifications_topic + "#")
+    client.subscribe(measurment_topic+"#")
+    client.subscribe(notifications_topic+"#")
     client.on_message = on_message
     print("subscribed successfully.")
-
 
 def publish(client):
     msg_count = 1
@@ -143,15 +107,12 @@ def publish(client):
 
 
 def run():
+    print("subscribing started successfully.")
     client = connect_mqtt()
-    print("subscribing started successfully 1.")
-    # client.loop_start()
+    #client.loop_start()
     subscribe(client)
-    print("subscribing started successfully 2.")
-    # publish(client)
+    #publish(client)
     client.loop_forever()
-    print("subscribing started successfully 3.")
-
 
 def run_reciever_in_threading():
     global broker
@@ -160,8 +121,8 @@ def run_reciever_in_threading():
     global notifications_topic
     broker = os.environ["mosquitto_url"]
     port = int(os.environ["mosquitto_port"])
-    measurment_topic = "SCD_IOT_PROJECT/measurments/"
-    notifications_topic = "SCD_IOT_PROJECT/notifications/"
+    measurment_topic ="SCD_IOT_PROJECT/measurments/"
+    notifications_topic ="SCD_IOT_PROJECT/notifications/"
     while True:
         try:
             run()
@@ -169,12 +130,11 @@ def run_reciever_in_threading():
             print("reciever thread has error contact administrator")
             print(ex)
 
-
 if __name__ == '__main__':
     broker = "127.0.0.1"
     port = 1883
-    measurment_topic = "SCD_IOT_PROJECT/measurments/"
-    notifications_topic = "SCD_IOT_PROJECT/notifications/"
+    measurment_topic ="SCD_IOT_PROJECT/measurments/"
+    notifications_topic ="SCD_IOT_PROJECT/notifications/"
     run()
 #
 # import sys
