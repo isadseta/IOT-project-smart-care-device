@@ -1,4 +1,3 @@
-#CONNECTING TELEGRAM TO MQTT
 import sys
 import threading
 from telebot import TeleBot
@@ -11,6 +10,31 @@ from io import BytesIO
 
 from mosqitues_sample_reciever import run_reciever_in_threading
 
+
+
+try:
+    if os.environ['service_catalog'] == None:
+        os.environ['service_catalog'] = 'http://localhost:50010'
+except:
+    os.environ['service_catalog'] = 'http://localhost:50010'
+
+try:
+    if os.environ['telegram_token'] == None:
+        os.environ['telegram_token'] = '7765834121:AAGv4Rvsh-lVhsBmjnA_cH6etECDOs1JzhU'
+except:
+    os.environ['telegram_token'] = '7765834121:AAGv4Rvsh-lVhsBmjnA_cH6etECDOs1JzhU'
+
+try:
+    if os.environ['mosquitto_url'] == None:
+        os.environ['mosquitto_url'] = "10.48.83.230"
+except:
+    os.environ['mosquitto_url'] = "10.48.83.230"
+
+try:
+    if os.environ['mosquitto_port'] == None:
+        os.environ['mosquitto_port'] = "1883"
+except:
+    os.environ['mosquitto_port'] = "1883"
 
 def change_domain_name(url):
     """Extracts the port number from a URL.
@@ -36,17 +60,9 @@ def change_domain_name(url):
     new_url=f"http://localhost:{port}"
     return new_url
 
-bot = TeleBot(token='7765834121:AAGv4Rvsh-lVhsBmjnA_cH6etECDOs1JzhU')
+bot = TeleBot(os.environ["telegram_token"])
 
 system_config=None
-
-try:
-    if os.environ['service_catalog'] == None:
-        os.environ['service_catalog'] = 'http://localhost:50010'
-except:
-    os.environ['service_catalog'] = 'http://localhost:50010'
-
-
 def reload_config():
     global system_config
     # getting system configs
@@ -300,4 +316,3 @@ while True:
     except Exception as ex:
         print("We have error in bot \n call administrator.")
         print(ex)
-

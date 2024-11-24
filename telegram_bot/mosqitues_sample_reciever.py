@@ -18,6 +18,8 @@ system_config=None
 client_id = f'publish-{random.randint(0, 1000)}'
 # username = 'emqx'
 # password = 'public'
+
+bot = None
 def reload_config():
     global system_config
     # getting system configs
@@ -76,34 +78,23 @@ def connect_mqtt():
     return client
 
 def process_notification(topic,message):
-    print("1")
     # Your bot's API token (from BotFather)
-    bot = TeleBot(token='7765834121:AAGv4Rvsh-lVhsBmjnA_cH6etECDOs1JzhU')
-    print("2")
     user_id=topic.split("/")[3]
-
-    print("3")
     current_system_config=system_config_loader()
-    print("4")
     resource_catalog_microsevice_address=current_system_config['resource_catalog']['service_value']
-    print("5")
     resource_catalog_microsevice_address=change_domain_name(resource_catalog_microsevice_address)+"/UsersManagerService?id="+user_id
-    print("6")
     user_data=requests.get(resource_catalog_microsevice_address)
-    print("7")
     user_data=json.loads(user_data.text)
-    print("8")
     if len(user_data) <1:
         return
-    print("10")
     if user_data[0]["user_telegram_bot_id"] == "" or user_data[0]["user_telegram_bot_id"]=="-------------":
         return
-    print("11")
     user_Data_chat_id=user_data[0]["user_telegram_bot_id"]
-    print("12")
     # Sending the message
+    global bot
+    if bot==None:
+        bot=TeleBot(os.environ["telegram_token"])
     bot.send_message(user_Data_chat_id, message)
-    print("13")
     print ("=======================================")
     print ("message sent to user.")
 
@@ -166,10 +157,22 @@ if __name__ == '__main__':
     except:
         os.environ['service_catalog'] = 'http://localhost:50010'
 
-    broker = "127.0.0.1"
-    port = 1883
-    # broker = os.environ["mosquitto_url"]
-    # port = int(os.environ["mosquitto_port"])
+
+    try:
+        if os.environ['mosquitto_url'] == None:
+            os.environ['mosquitto_url'] = "10.48.83.230"
+    except:
+        os.environ['mosquitto_url'] = "10.48.83.230"
+
+
+    try:
+        if os.environ['mosquitto_port'] == None:
+            os.environ['mosquitto_port'] = "1883"
+    except:
+        os.environ['mosquitto_port'] = "1883"
+
+    broker = os.environ["mosquitto_url"]
+    port = int(os.environ["mosquitto_port"])
     measurment_topic ="SCD_IOT_PROJECT/measurments/"
     notifications_topic ="SCD_IOT_PROJECT/notifications/"
     run()
@@ -196,7 +199,4 @@ if __name__ == '__main__':
 #     print("Press CTRL+C to exit...")
 #     client.loop_forever()
 # except Exception:
-#     print("Caught an Exception, something went wrong...")
-# finally:
-#     print("Disconnecting from the MQTT broker")
-#     client.disconnect()
+#     print("Caught an Ex
