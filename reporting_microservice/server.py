@@ -31,19 +31,49 @@ class MeaturmentsMicroservice(BaseService):
             if not "influx_db_access" in app_config.keys():
                 raise Exception("the influx_db_access micro service is not registered.")
             user_id=params["user_id"]
+            analyze_meaturments= True
+            try:
+                resource_catalog=app_config["resource_catalog"]["service_value"]
+                resource_catalog=resource_catalog + f"/UsersManagerService?id={user_id}"
+                user_data=requests.get(resource_catalog).json()[0]
+                minimum_heart_rate = user_data["min_heart_rate"]
+                maximum_heart_rate = user_data["max_heart_rate"]
+                minimum_body_temprature_rate = user_data["min_body_temprature"]
+                maximum_body_temprature_rate = user_data["max_body_temprature"]
+                if minimum_heart_rate == None or maximum_heart_rate == None or minimum_body_temprature_rate == None or maximum_body_temprature_rate == None:
+                    analyze_meaturments = False
+            except:
+                analyze_meaturments = False
+
             senser_id_prefix=params["senser_id_prefix"]
             date_days_length=params["date_days_length"]
             influx_db_access_url=app_config["influx_db_access"]["service_value"]
             reporting_parameter=uri[0]
             if reporting_parameter=='heart':
                 reporting_url=influx_db_access_url+f'/HeartInfluxDbDal?user_id={user_id}&senser_id_prefix={senser_id_prefix}&date_days_length={date_days_length}'
-                report_result=requests.get(reporting_url)
-                return report_result.text
+                report_result=requests.get(reporting_url).json()
+                for item in report_result:
+                    if analyze_meaturments:
+                        if float(item["_value"])<float(minimum_heart_rate) or float(item["_value"])>float(maximum_heart_rate)  :
+                            item["analyze"]="Bad"
+                        else:
+                            item["analyze"] = "Good"
+                    else:
+                        item["analyze"] = "not_analyzed"
+                return json.dumps(report_result)
 
             if reporting_parameter=='temprature':
                 reporting_url=influx_db_access_url+f'/TempratureInfluxDbDal?user_id={user_id}&senser_id_prefix={senser_id_prefix}&date_days_length={date_days_length}'
-                report_result=requests.get(reporting_url)
-                return report_result.text
+                report_result=requests.get(reporting_url).json()
+                for item in report_result:
+                    if analyze_meaturments:
+                        if float(item["_value"])<float(minimum_body_temprature_rate) or float(item["_value"])>float(maximum_body_temprature_rate):
+                            item["analyze"]="Bad"
+                        else:
+                            item["analyze"] = "Good"
+                    else:
+                        item["analyze"] = "not_analyzed"
+                return json.dumps(report_result)
         except Exception as ex:
             raise Exception(ex)
         return 'not found report with these parametere'
