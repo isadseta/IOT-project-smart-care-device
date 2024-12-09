@@ -33,8 +33,8 @@ services:
       - "scd_influxdb"
   scd-mosquitto:
     image: scd-mosquitto
-    hostname: mosquitto
-    container_name: mosquitto
+    hostname: scd-mosquitto
+    container_name: scd-mosquitto
     restart: unless-stopped
     ports:
       - "1883:1883"
@@ -133,6 +133,16 @@ services:
       - "scd_relational_database_dao"
       - "scd-influxdb-dal"
       - "scd_influxdb"
+  scd_telegram_bot:
+    image: scd_telegram_bot
+    restart: always
+    environment:
+      service_catalog: http://service_catalog:50010
+      telegram_token: 7765834121:AAGv4Rvsh-lVhsBmjnA_cH6etECDOs1JzhU
+      mosquitto_url: scd-mosquitto
+      mosquitto_port: 1883
+      environment: RUNNING
+
 
 
 
