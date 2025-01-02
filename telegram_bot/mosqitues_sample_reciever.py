@@ -139,8 +139,8 @@ def run_reciever_in_threading():
     global port
     global measurment_topic
     global notifications_topic
-    broker ="10.48.83.230"
-    port = 1883
+    broker =os.environ['mosquitto_url']
+    port = int(os.environ['mosquitto_port'])
     notifications_topic ="SCD_IOT_PROJECT/notifications/"
     while True:
         try:
