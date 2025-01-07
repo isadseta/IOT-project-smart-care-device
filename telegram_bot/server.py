@@ -319,7 +319,6 @@ def handle_sickperson(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    print("Handle operation called")
     print(call.data)
     if call.data == "doctor_Sick_person_report":
         handle_doctor_select_operation(call.message, call.data)
@@ -337,9 +336,9 @@ def callback_query(call):
         send_welcome(call.message)
 
 
-# mqtt_reviever_thread = threading.Thread(target=run_reciever_in_threading)
-# mqtt_reviever_thread.start()
-# sys.stdout.flush()
+mqtt_reviever_thread = threading.Thread(target=run_reciever_in_threading)
+mqtt_reviever_thread.start()
+sys.stdout.flush()
 
 while True:
     try:

@@ -130,10 +130,10 @@ class UsersDAL():
                     "','" + converted_data["user_hashed_password"] +
                     "'," + converted_data["user_type"] +
                     ",'" + converted_data["user_telegram_bot_id"] +
-                    "'," + str(converted_data["min_heart_rate"]) if str(converted_data["min_heart_rate"])!="" else 0 +
-                    "," + str(converted_data["max_heart_rate"]) if str(converted_data["max_heart_rate"])!="" else 0  +
-                    "," + str(converted_data["min_body_temprature"]) if str(converted_data["min_body_temprature"])!="" else 0  +
-                    "," + str(converted_data["max_body_temprature"]) if str(converted_data["max_body_temprature"])!="" else 0  +" )")
+                    "'," + (str(converted_data["min_heart_rate"]) if str(converted_data["min_heart_rate"])!="" else 0) +
+                    "," + (str(converted_data["max_heart_rate"]) if str(converted_data["max_heart_rate"])!="" else 0)  +
+                    "," + (str(converted_data["min_body_temprature"]) if str(converted_data["min_body_temprature"])!="" else 0)  +
+                    "," + (str(converted_data["max_body_temprature"]) if str(converted_data["max_body_temprature"])!="" else 0)  +" )")
         print(query)
         result = execute_query(query)
         print(result)
