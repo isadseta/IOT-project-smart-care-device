@@ -99,3 +99,59 @@ def tables_creation():
         print(ex)
         print("Users creation failed")
         print(query)
+
+    try:
+        query = """
+        DO $$
+        BEGIN
+            -- Check if the foreign key constraint already exists
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.table_constraints
+                WHERE constraint_type = 'FOREIGN KEY'
+                  AND table_name = 'messagge_content'
+                  AND constraint_name = 'fk_users_messages_sender'
+            ) THEN
+                -- Add the foreign key constraint
+                ALTER TABLE messages_table
+                ADD CONSTRAINT fk_users_messages_sender
+                FOREIGN KEY (sender_id)
+                REFERENCES users_table (id)
+                ON DELETE CASCADE;
+            END IF;
+        
+            -- Check if the foreign key constraint already exists
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.table_constraints
+                WHERE constraint_type = 'FOREIGN KEY'
+                  AND table_name = 'messagge_content'
+                  AND constraint_name = 'fk_users_messages_reciever'
+            ) THEN
+                -- Add the foreign key constraint
+                ALTER TABLE messages_table
+                ADD CONSTRAINT fk_users_messages_reciever
+                FOREIGN KEY (sender_id)
+                REFERENCES users_table (id)
+                ON DELETE CASCADE;
+            END IF;
+        END $$;
+        """
+        execute_query(query,max_retry=50)
+    except Exception as ex:
+        print("=========================================================================================")
+        print(ex)
+        print("Users creation failed")
+        print(query)
+
+    try:
+        query = """
+        ALTER TABLE users_table
+        ADD CONSTRAINT users_table_id_unique UNIQUE (id);
+        """
+        execute_query(query, max_retry=50)
+    except Exception as ex:
+        print("=========================================================================================")
+        print(ex)
+        print("Users creation failed")
+        print(query)
